@@ -399,11 +399,11 @@ void FLASH_DisableWriteProtectionPages(void)
 void Main_Menu(void)
 {
     uint8_t key = 0;
-    BlockNbr = (FlashDestination - 0x08000000) >> 12;//0x3000>>12=3
+    BlockNbr = (FlashDestination - 0x08000000) >> 12;//0x3000>>12=3 //计算flash块
 
  
 #if defined (STM32F10X_MD) || defined (STM32F10X_MD_VL)
-    UserMemoryMask = ((uint32_t)~((1 << BlockNbr) - 1));//~(0x1000-1=0xFFF) = 0xFFFF F000
+    UserMemoryMask = ((uint32_t)~((1 << BlockNbr) - 1));//~(0x1000-1=0xFFF) = 0xFFFF F000 //计算掩码
 #else /* USE_STM3210E_EVAL */
     if (BlockNbr < 62)
     {
@@ -415,9 +415,9 @@ void Main_Menu(void)
     }
 #endif /* (STM32F10X_MD) || (STM32F10X_MD_VL) */
 
-    if ((FLASH_GetWriteProtectionOptionByte() & UserMemoryMask) != UserMemoryMask)
+    if ((FLASH_GetWriteProtectionOptionByte() & UserMemoryMask) != UserMemoryMask)//查看块所在区域是否写保护
     {
-        FlashProtection = 1;
+        FlashProtection = 1;//写保护
     }
     else
     {

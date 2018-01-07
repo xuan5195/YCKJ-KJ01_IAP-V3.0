@@ -24,7 +24,7 @@ uint16_t PageSize = PAGE_SIZE;
 uint32_t EraseCounter = 0x0;
 uint32_t NbrOfPage = 0;
 FLASH_Status FLASHStatus = FLASH_COMPLETE;
-uint32_t RamSource;
+uint32_t RamSource; 
 extern uint8_t tab_1024[1024];
 
 /*******************************************************************************
