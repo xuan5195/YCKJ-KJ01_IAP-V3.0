@@ -26,7 +26,7 @@ typedef  void (*pFunction)(void);
 //* ºê ------------------------------------------------------------------------*/
 #define CMD_STRING_SIZE       128
 
-#define ApplicationAddress    0x8003000
+#define ApplicationAddress    0x8003C00
 
 #if defined (STM32F10X_MD) || defined (STM32F10X_MD_VL)
  #define PAGE_SIZE                         (0x400)    /* 1 Kbyte */
