@@ -41,7 +41,7 @@ void SerialDownload(void)
         Int2Str(Number, Size);
         SerialPutString("\n\r Size: ");
         SerialPutString(Number);
-        SerialPutString("  Bytes\r\n");
+        SerialPutString("   Bytes\r\n");
         SerialPutString("-------------------\n");
     }
     else if (Size == -1)

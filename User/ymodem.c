@@ -128,144 +128,143 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
 
 int32_t Ymodem_Receive (uint8_t *buf)
 {
-  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD], file_size[FILE_SIZE_LENGTH], *file_ptr, *buf_ptr;
-  int32_t i, j, packet_length, session_done, file_done, packets_received, errors, session_begin, size = 0;
+	uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD], file_size[FILE_SIZE_LENGTH], *file_ptr, *buf_ptr;
+	int32_t i, j, packet_length, session_done, file_done, packets_received, errors, session_begin, size = 0;
 
-  /* Initialize FlashDestination variable */
-  FlashDestination = ApplicationAddress;
+	/* Initialize FlashDestination variable */
+	FlashDestination = ApplicationAddress;
+	for (session_done = 0, errors = 0, session_begin = 0; ;)//死循环，一个ymodem连接
+	{
+		for (packets_received = 0, file_done = 0, buf_ptr = buf; ;)//死循环，不断接收数据
+		{
+			switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT))//接收数据包
+			{
+				case 0:
+					errors = 0;
+					switch (packet_length)
+					{
+						/* Abort by sender */
+						case - 1: //发送端中止传输
+							Send_Byte(ACK);//回复ACK
+							return 0;
+						/* End of transmission */
+						case 0://接收结束或接收错误
+							Send_Byte(ACK);
+							file_done = 1;//接收完成
+							break;
+						/* Normal packet */
+						default://接收数据中
+							if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0xff))
+							{
+								Send_Byte(NAK);//接收错误的数据，回复NAK
+							}
+							else//接收到正确的数据
+							{
+								if (packets_received == 0)//接收第一帧数据
+								{
+									/* Filename packet */
+									if (packet_data[PACKET_HEADER] != 0)//包含文件信息：文件名，文件长度等
+									{
+										/* Filename packet has valid data */
+										for (i = 0, file_ptr = packet_data + PACKET_HEADER; (*file_ptr != 0) && (i < FILE_NAME_LENGTH);)
+										{
+											file_name[i++] = *file_ptr++;//保存文件名
+										}
+										file_name[i++] = '\0';//文件名以'\0'结束
+										for (i = 0, file_ptr ++; (*file_ptr != ' ') && (i < FILE_SIZE_LENGTH);)
+										{
+											file_size[i++] = *file_ptr++;//保存文件大小
+										}
+										file_size[i++] = '\0';//文件大小以'\0'结束
+										Str2Int(file_size, &size);
 
-  for (session_done = 0, errors = 0, session_begin = 0; ;)
-  {
-    for (packets_received = 0, file_done = 0, buf_ptr = buf; ;)
-    {
-      switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT))
-      {
-        case 0:
-          errors = 0;
-          switch (packet_length)
-          {
-            /* Abort by sender */
-            case - 1:
-              Send_Byte(ACK);
-              return 0;
-            /* End of transmission */
-            case 0:
-              Send_Byte(ACK);
-              file_done = 1;
-              break;
-            /* Normal packet */
-            default:
-              if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0xff))
-              {
-                Send_Byte(NAK);
-              }
-              else
-              {
-                if (packets_received == 0)
-                {
-                  /* Filename packet */
-                  if (packet_data[PACKET_HEADER] != 0)
-                  {
-                    /* Filename packet has valid data */
-                    for (i = 0, file_ptr = packet_data + PACKET_HEADER; (*file_ptr != 0) && (i < FILE_NAME_LENGTH);)
-                    {
-                      file_name[i++] = *file_ptr++;
-                    }
-                    file_name[i++] = '\0';
-                    for (i = 0, file_ptr ++; (*file_ptr != ' ') && (i < FILE_SIZE_LENGTH);)
-                    {
-                      file_size[i++] = *file_ptr++;
-                    }
-                    file_size[i++] = '\0';
-                    Str2Int(file_size, &size);
+										/* Test the size of the image to be sent */
+										/* Image size is greater than Flash size */
+										if (size > (FLASH_SIZE - 1))//升级固件过大
+										{
+											/* End session */
+											Send_Byte(CA);
+											Send_Byte(CA);//连续发送2次中止符CA
+											return -1;//返回
+										}
 
-                    /* Test the size of the image to be sent */
-                    /* Image size is greater than Flash size */
-                    if (size > (FLASH_SIZE - 1))
-                    {
-                      /* End session */
-                      Send_Byte(CA);
-                      Send_Byte(CA);
-                      return -1;
-                    }
+										/* Erase the needed pages where the user application will be loaded */
+										/* Define the number of page to be erased */
+										NbrOfPage = FLASH_PagesMask(size);
 
-                    /* Erase the needed pages where the user application will be loaded */
-                    /* Define the number of page to be erased */
-                    NbrOfPage = FLASH_PagesMask(size);
+										/* Erase the FLASH pages */ //擦除相应的flash空间
+										for (EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++)
+										{
+											FLASHStatus = FLASH_ErasePage(FlashDestination + (PageSize * EraseCounter));
+										}
+										Send_Byte(ACK);//回复ACk
+										Send_Byte(CRC16);//发送'C',询问数据
+									}
+									/* Filename packet is empty, end session */
+									else//文件名数据包为空，结束传输
+									{
+										Send_Byte(ACK);//回复ACK
+										file_done = 1;//停止接收
+										session_done = 1;//结束对话
+										break;
+									}
+								}
+								/* Data packet */
+								else//收到数据包
+								{
+									memcpy(buf_ptr, packet_data + PACKET_HEADER, packet_length);//拷贝数据
+									RamSource = (uint32_t)buf;//8位强制转化成32为数据
+									for (j = 0;(j < packet_length) && (FlashDestination <  ApplicationAddress + size);j += 4)
+									{
+										/* Program the data received into STM32F10x Flash */
+										FLASH_ProgramWord(FlashDestination, *(uint32_t*)RamSource);//烧写升级数据
 
-                    /* Erase the FLASH pages */
-                    for (EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++)
-                    {
-                      FLASHStatus = FLASH_ErasePage(FlashDestination + (PageSize * EraseCounter));
-                    }
-                    Send_Byte(ACK);
-                    Send_Byte(CRC16);
-                  }
-                  /* Filename packet is empty, end session */
-                  else
-                  {
-                    Send_Byte(ACK);
-                    file_done = 1;
-                    session_done = 1;
-                    break;
-                  }
-                }
-                /* Data packet */
-                else
-                {
-                  memcpy(buf_ptr, packet_data + PACKET_HEADER, packet_length);
-                  RamSource = (uint32_t)buf;
-                  for (j = 0;(j < packet_length) && (FlashDestination <  ApplicationAddress + size);j += 4)
-                  {
-                    /* Program the data received into STM32F10x Flash */
-                    FLASH_ProgramWord(FlashDestination, *(uint32_t*)RamSource);
-
-                    if (*(uint32_t*)FlashDestination != *(uint32_t*)RamSource)
-                    {
-                      /* End session */
-                      Send_Byte(CA);
-                      Send_Byte(CA);
-                      return -2;
-                    }
-                    FlashDestination += 4;
-                    RamSource += 4;
-                  }
-                  Send_Byte(ACK);
-                }
-                packets_received ++;
-                session_begin = 1;
-              }
-          }
-          break;
-        case 1:
-          Send_Byte(CA);
-          Send_Byte(CA);
-          return -3;
-        default:
-          if (session_begin > 0)
-          {
-            errors ++;
-          }
-          if (errors > MAX_ERRORS)
-          {
-            Send_Byte(CA);
-            Send_Byte(CA);
-            return 0;
-          }
-          Send_Byte(CRC16);
-          break;
-      }
-      if (file_done != 0)
-      {
-        break;
-      }
-    }
-    if (session_done != 0)
-    {
-      break;
-    }
-  }
-  return (int32_t)size;
+										if (*(uint32_t*)FlashDestination != *(uint32_t*)RamSource)
+										{
+											/* End session */
+											Send_Byte(CA);
+											Send_Byte(CA);//flash烧写错误，连续发送2次中止符CA
+											return -2;//烧写错误
+										}
+										FlashDestination += 4;
+										RamSource += 4;
+									}
+									Send_Byte(ACK);//flash烧写成功，回复ACK
+								}
+								packets_received ++;//收到数据包的个数
+								session_begin = 1;//设置接收中标志
+							}
+					}
+					break;
+				case 1://用户中止
+					Send_Byte(CA);
+					Send_Byte(CA);//连续发送2次中止符CA
+					return -3;//烧写中止
+				default:
+					if (session_begin > 0)//传输过程中发生错误
+					{
+						errors ++;
+					}
+					if (errors > MAX_ERRORS)//错误超过上限
+					{
+						Send_Byte(CA);
+						Send_Byte(CA);//连续发送2次中止符CA
+						return 0;//传输过程发生过多错误
+					}
+					Send_Byte(CRC16);//发送'C',继续接收
+					break;
+			}
+			if (file_done != 0)//文件接收完毕，退出循环
+			{
+				break;
+			}
+		}
+		if (session_done != 0)//对话结束，跳出循环
+		{
+			break;
+		}
+	}
+	return (int32_t)size;//返回接收到文件的大小
 }
 
 /*******************************************************************************

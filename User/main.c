@@ -11,12 +11,8 @@
 /* 包含头文件 *****************************************************************/
 #include "common.h"
 #include "bsp.h"
-/* 类型声明 ------------------------------------------------------------------*/
-/* 宏 ------------------------------------------------------------------------*/
-#define LED2   GPIO_Pin_6
-#define LED3   GPIO_Pin_7
-#define LED4   GPIO_Pin_8
-#define LED5   GPIO_Pin_9
+
+
 /* 变量 ----------------------------------------------------------------------*/
 extern pFunction Jump_To_Application;
 extern uint32_t JumpAddress;
@@ -39,11 +35,8 @@ void USART_Configuration(void);
 *******************************************************************************/
 int main(void)
 {
-    //Flash 解锁
-    FLASH_Unlock();
-//    LED_Configuration();
-    //配置按键
-//    KEY_Configuration() ;
+    
+    FLASH_Unlock();//Flash 解锁
 	BspTm1639_Config();
 	BspTm1639_Show(0x03,0x00);
     IAP_Init();
@@ -59,7 +52,7 @@ int main(void)
 			SerialPutString("\r\n======================================================================");
 			SerialPutString("\r\n=              (C) COPYRIGHT 2011 Lierda                             =");
 			SerialPutString("\r\n=                                                                    =");
-			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.0.0)        =");
+			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.2.3)        =");
 			SerialPutString("\r\n=                                                                    =");
 			SerialPutString("\r\n=             0x0800 3C00           By 12345678                      =");
 			SerialPutString("\r\n======================================================================");
@@ -93,44 +86,6 @@ int main(void)
 
 
 /*******************************************************************************
-  * @函数名称	LED_Configuration
-  * @函数说明   配置使用LED
-  * @输入参数   无
-  * @输出参数   无
-  * @返回参数   无
-*******************************************************************************/
-void LED_Configuration(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-    //使能LED所在GPIO的时钟
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB , ENABLE);
-    //初始化LED的GPIO
-    GPIO_InitStructure.GPIO_Pin = LED2 | LED3 | LED4 | LED5;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
-    GPIO_SetBits(GPIOB,LED2 | LED3 | LED4 | LED5);  //熄灭LED2-5
-}
-
-/*******************************************************************************
-  * @函数名称	KEY_Configuration
-  * @函数说明   按键初始化
-  * @输入参数   无
-  * @输出参数   无
-  * @返回参数   无
-*******************************************************************************/
-void KEY_Configuration(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-
-    //配置按键
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
-}
-
-/*******************************************************************************
   * @函数名称	GPIO_Configuration
   * @函数说明   配置使用USART1的相关IO管脚
   * @输入参数   无
@@ -139,19 +94,6 @@ void KEY_Configuration(void)
 *******************************************************************************/
 void GPIO_Configuration(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA, ENABLE);
-    // 配置 USART1 Tx (PA.09) 作为功能引脚并上拉输出模式
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    //配置 USART1 Tx (PA.10) 作为功能引脚并是浮空输入模式
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 
 /*******************************************************************************
@@ -164,6 +106,7 @@ void GPIO_Configuration(void)
 void IAP_Init(void)
 {
     USART_InitTypeDef USART_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
     /* USART1 配置 ------------------------------------------------------------
          USART1 配置如下:
@@ -181,7 +124,18 @@ void IAP_Init(void)
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 
-    GPIO_Configuration();
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA, ENABLE);
+    // 配置 USART1 Tx (PA.09) 作为功能引脚并上拉输出模式
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    //配置 USART1 Tx (PA.10) 作为功能引脚并是浮空输入模式
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
     USART_Init(USART1, &USART_InitStructure);
     // 使能 USART1
     USART_Cmd(USART1, ENABLE);
