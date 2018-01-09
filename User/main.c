@@ -14,15 +14,20 @@
 
 
 /* 变量 ----------------------------------------------------------------------*/
+uint8_t g_RxMessage[8]={0};	//CAN接收数据
+uint8_t g_RxMessFlag=0;		//CAN接收数据 标志
+extern uint8_t Physical_ADD[4];//物理地址
+extern uint8_t FM1702_Key[7];
+extern uint8_t WaterCost,CostNum;	//WaterCost=水费 最小扣款金额  //脉冲数
+extern uint8_t g_IAP_Flag;	//在线升级标志
+
+
 extern pFunction Jump_To_Application;
 extern uint32_t JumpAddress;
 
 /* 函数声明 ------------------------------------------------------------------*/
 void Delay(__IO uint32_t nCount);
-void LED_Configuration(void);
 static void IAP_Init(void);
-void KEY_Configuration(void);
-void GPIO_Configuration(void);
 void USART_Configuration(void);
 /* 函数功能 ------------------------------------------------------------------*/
 
@@ -40,11 +45,17 @@ int main(void)
 	BspTm1639_Config();
 	BspTm1639_Show(0x03,0x00);
     IAP_Init();
-    //按键是否按下
-
+	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...Starting Up...\r\n");
+	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_8tq,CAN_BS2_7tq,5,CAN_Mode_Normal);//CAN初始化正常模式,波特率450Kbps    
+	Read_Flash_Dat();	//读取Flash数据
+	SerialPutString("g_IAP_Flag:");	SerialPutString(g_IAP_Flag);
+//	printf("Physical_ADD:%02X%02X%02X%02X;\r\n",Physical_ADD[0],Physical_ADD[1],Physical_ADD[2],Physical_ADD[3]);
+//	printf("FM1702_Key:%02X%02X%02X%02X%02X%02X; %02d;\r\n",FM1702_Key[0],FM1702_Key[1],FM1702_Key[2],FM1702_Key[3],FM1702_Key[4],FM1702_Key[5],FM1702_Key[6]);
+//	printf("WaterCost:0.%03d; CostNum:%02d; g_IAP_Flag:0x%02X;\r\n",WaterCost,CostNum,g_IAP_Flag);
     while (1)
     {
 		//if (GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13)  == 0x00)
+		if (g_IAP_Flag  == 0xAA)
 		{
 			//假如按键按下
 			//执行IAP驱动程序更新Flash程序
@@ -54,33 +65,33 @@ int main(void)
 			SerialPutString("\r\n=                                                                    =");
 			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.2.3)        =");
 			SerialPutString("\r\n=                                                                    =");
-			SerialPutString("\r\n=             0x0800 3C00           By 12345678                      =");
+			SerialPutString("\r\n=             0x0800 5000           By 12345678                      =");
 			SerialPutString("\r\n======================================================================");
 			SerialPutString("\r\n\r\n");
 			Main_Menu ();
 		}
 		//否则执行用户程序
-//		else
-//		{
-//			//判断用户是否已经下载程序，因为正常情况下此地址是栈地址。
-//			//若没有这一句的话，即使没有下载程序也会进入而导致跑飞。
-//			if (((*(__IO uint32_t*)ApplicationAddress) & 0x2FFE0000 ) == 0x20000000)
-//			{
-//				SerialPutString("Execute user Program\r\n\n");
-//				//跳转至用户代码
-//				JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);
-//				Jump_To_Application = (pFunction) JumpAddress;
+		else
+		{
+			//判断用户是否已经下载程序，因为正常情况下此地址是栈地址。
+			//若没有这一句的话，即使没有下载程序也会进入而导致跑飞。
+			if (((*(__IO uint32_t*)ApplicationAddress) & 0x2FFE0000 ) == 0x20000000)
+			{
+				SerialPutString("Execute user Program\r\n\n");
+				//跳转至用户代码
+				JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);
+				Jump_To_Application = (pFunction) JumpAddress;
 
-//				//初始化用户程序的堆栈指针
-//				__set_MSP(*(__IO uint32_t*) ApplicationAddress);
-//				Jump_To_Application();
-//			}
-//			else
-//			{
-//				SerialPutString("no user Program\r\n\n");
-//				Delay(0xFFFF);
-//			}
-//		}
+				//初始化用户程序的堆栈指针
+				__set_MSP(*(__IO uint32_t*) ApplicationAddress);
+				Jump_To_Application();
+			}
+			else
+			{
+				SerialPutString("no user Program\r\n\n");
+				Delay(0xFFFF);
+			}
+		}
     }
 }
 

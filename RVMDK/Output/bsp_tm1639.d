@@ -7,8 +7,9 @@
 .\output\bsp_tm1639.o: C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include\core_cmFunc.h
 .\output\bsp_tm1639.o: ..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.h
 .\output\bsp_tm1639.o: ..\User\stm32f10x_conf.h
-.\output\bsp_tm1639.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_exti.h
+.\output\bsp_tm1639.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_can.h
 .\output\bsp_tm1639.o: ..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\stm32f10x.h
+.\output\bsp_tm1639.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_exti.h
 .\output\bsp_tm1639.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_flash.h
 .\output\bsp_tm1639.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_gpio.h
 .\output\bsp_tm1639.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_rcc.h

@@ -79,7 +79,7 @@ void BspTm1639_Show(uint8_t ShowMode,uint32_t ShowDate)
 			BspTm1639_Writebyte(0x0F);	BspTm1639_Writebyte(0x00);
 			for(i=0;i<6;i++)
 			{
-				BspTm1639_Writebyte(0x00);	BspTm1639_Writebyte(0x04);
+				BspTm1639_Writebyte(0x09);	BspTm1639_Writebyte(0x04);
 			}
 			BspTm1639_Writebyte(0x09);	BspTm1639_Writebyte(0x03);		
 		}

@@ -17,7 +17,7 @@
 /* 当需要使用以下功能时，需要去掉相关注释，打开相应的头文件 ，并且在工程中加入相应的C源文件*/
 //#include "stm32f10x_adc.h"        
 //#include "stm32f10x_bkp.h"        
-//#include "stm32f10x_can.h"        
+#include "stm32f10x_can.h"        
 //#include "stm32f10x_cec.h"        
 //#include "stm32f10x_crc.h"        
 //#include "stm32f10x_dac.h"        

@@ -13,6 +13,7 @@
 /* 包含头文件 *****************************************************************/
 #include "common.h"
 #include "ymodem.h"
+#include "bsp.h"
 
 /* 变量 ----------------------------------------------------------------------*/
 pFunction Jump_To_Application;
@@ -20,6 +21,7 @@ uint32_t JumpAddress;
 uint32_t BlockNbr = 0, UserMemoryMask = 0;
 __IO uint32_t FlashProtection = 0;
 extern uint32_t FlashDestination;
+extern uint8_t g_IAP_Flag;	//在线升级标志
 
 
 /*******************************************************************************
@@ -453,6 +455,8 @@ void Main_Menu(void)
         else if (key == 0x33)
         {
             SerialPutString("Execute user Program\r\n\n");
+//			g_IAP_Flag = 0x00;
+//			Write_Flash_Dat();
             JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);
 
             //跳转到用户程序

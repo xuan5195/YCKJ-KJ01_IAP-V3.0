@@ -273,7 +273,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x8000000</StartAddress>
-                <Size>0x3c00</Size>
+                <Size>0x5000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -414,6 +414,21 @@
               <FileType>1</FileType>
               <FilePath>..\User\bsp\bsp_tm1639.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_crc8.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_crc8.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_stmflash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_stmflash.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -443,6 +458,11 @@
               <FileName>stm32f10x_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_can.c</FilePath>
             </File>
           </Files>
         </Group>

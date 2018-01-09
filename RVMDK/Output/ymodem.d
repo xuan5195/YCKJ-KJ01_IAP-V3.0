@@ -10,8 +10,9 @@
 .\output\ymodem.o: C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include\core_cmFunc.h
 .\output\ymodem.o: ..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.h
 .\output\ymodem.o: ..\User\stm32f10x_conf.h
-.\output\ymodem.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_exti.h
+.\output\ymodem.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_can.h
 .\output\ymodem.o: ..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\stm32f10x.h
+.\output\ymodem.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_exti.h
 .\output\ymodem.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_flash.h
 .\output\ymodem.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_gpio.h
 .\output\ymodem.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_rcc.h
