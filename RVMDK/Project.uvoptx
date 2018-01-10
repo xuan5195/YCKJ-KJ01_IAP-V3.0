@@ -181,9 +181,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>108</LineNumber>
+          <LineNumber>188</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134225300</Address>
+          <Address>134222276</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -192,7 +192,23 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\User\bsp\bsp_can.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Project\../User/bsp/bsp_can.c\108</Expression>
+          <Expression>\\Project\../User/bsp/bsp_can.c\188</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>104</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134221814</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\User\bsp\bsp_can.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Project\../User/bsp/bsp_can.c\104</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -220,6 +236,16 @@
           <count>4</count>
           <WinNumber>1</WinNumber>
           <ItemText>Package_SendBuf</ItemText>
+        </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>pRxMessage</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>CAN_FilterInitStructure</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

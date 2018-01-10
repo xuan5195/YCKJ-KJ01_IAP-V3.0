@@ -22,6 +22,8 @@ uint32_t BlockNbr = 0, UserMemoryMask = 0;
 __IO uint32_t FlashProtection = 0;
 extern uint32_t FlashDestination;
 extern uint8_t g_IAP_Flag;	//在线升级标志
+extern CanRxMsg CAN1_RxMessage;
+extern volatile uint8_t CAN1_CanRxMsgFlag;//接收到CAN数据后的标志
 
 
 /*******************************************************************************
@@ -400,89 +402,49 @@ void FLASH_DisableWriteProtectionPages(void)
 *******************************************************************************/
 void Main_Menu(void)
 {
-    uint8_t key = 0;
-    BlockNbr = (FlashDestination - 0x08000000) >> 12;
+//    uint8_t key = 0;
+    BlockNbr = (FlashDestination - 0x08000000) >> 12;	//计算flash块
+    UserMemoryMask = ((uint32_t)~((1 << BlockNbr) - 1));//计算掩码
 
- 
-#if defined (STM32F10X_MD) || defined (STM32F10X_MD_VL)
-    UserMemoryMask = ((uint32_t)~((1 << BlockNbr) - 1));
-#else /* USE_STM3210E_EVAL */
-    if (BlockNbr < 62)
-    {
-        UserMemoryMask = ((uint32_t)~((1 << BlockNbr) - 1));
-    }
-    else
-    {
-        UserMemoryMask = ((uint32_t)0x80000000);
-    }
-#endif /* (STM32F10X_MD) || (STM32F10X_MD_VL) */
-
-    if ((FLASH_GetWriteProtectionOptionByte() & UserMemoryMask) != UserMemoryMask)
-    {
-        FlashProtection = 1;
-    }
-    else
-    {
-        FlashProtection = 0;
-    }
+    if ((FLASH_GetWriteProtectionOptionByte() & UserMemoryMask) != UserMemoryMask)//查看块所在区域是否写保护
+        FLASH_DisableWriteProtectionPages();//解除写保护
 
     while (1)
     {
-        SerialPutString("\r\n================== Main Menu ============================\r\n\n");
-        SerialPutString("  Download Image To the STM32F10x Internal Flash ------- 1\r\n\n");
-        SerialPutString("  Upload Image From the STM32F10x Internal Flash ------- 2\r\n\n");
-        SerialPutString("  Execute The New Program ------------------------------ 3\r\n\n");
-
-        if (FlashProtection != 0)
-        {
-            SerialPutString("  Disable the write protection ------------------------- 4\r\n\n");
-        }
-
-        SerialPutString("==========================================================\r\n\n");
-
-        key = GetKey();
-
-        if (key == 0x31)
-        {
-            //下载程序
-            SerialDownload();
-        }
-        else if (key == 0x32)
-        {
-            //上传程序
-            SerialUpload();
-        }
-        else if (key == 0x33)
-        {
-            SerialPutString("Execute user Program\r\n\n");
-//			g_IAP_Flag = 0x00;
-//			Write_Flash_Dat();
-            JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);
-
-            //跳转到用户程序
-            Jump_To_Application = (pFunction) JumpAddress;
-            //初始化用户程序的堆栈指针
-            __set_MSP(*(__IO uint32_t*) ApplicationAddress);
-            Jump_To_Application();
-        }
-        else if ((key == 0x34) && (FlashProtection == 1))
-        {
-            //解除写保护
-            FLASH_DisableWriteProtectionPages();
-        }
-        else
-        {
-            if (FlashProtection == 0)
-            {
-                SerialPutString("Invalid Number ! ==> The number should be either 1, 2 or 3\r");
-            }
-            else
-            {
-                SerialPutString("Invalid Number ! ==> The number should be either 1, 2, 3 or 4\r");
-            }
-        }
+		if(CAN1_CanRxMsgFlag)
+		{
+			CAN_BOOT_ExecutiveCommand(&CAN1_RxMessage);
+			CAN1_CanRxMsgFlag = 0;
+		}
+		
+//        key = GetKey();
+//        if (key == 0x31)
+//        {
+//            SerialDownload();//下载程序
+//        }
+//        else if (key == 0x33)
+//        {
+//            SerialPutString("Execute user Program\r\n\n");
+//            JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);            
+//            Jump_To_Application = (pFunction) JumpAddress;	//跳转到用户程序            
+//            __set_MSP(*(__IO uint32_t*) ApplicationAddress);//初始化用户程序的堆栈指针
+//            Jump_To_Application();
+//        }
     }
 }
 
+
+//控制程序跳转到指定位置开始执行 。
+//Addr 程序执行地址。
+//程序跳转状态。
+
+void CAN_JumpToApplication(void)
+{
+	JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);            
+	Jump_To_Application = (pFunction) JumpAddress;	//跳转到用户程序            
+	__set_MSP(*(__IO uint32_t*) ApplicationAddress);//初始化用户程序的堆栈指针
+	Jump_To_Application();
+	
+}
 
 /*******************************文件结束***************************************/

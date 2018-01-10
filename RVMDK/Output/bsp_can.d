@@ -16,10 +16,13 @@
 .\output\bsp_can.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_usart.h
 .\output\bsp_can.o: ..\Libraries\STM32F10x_StdPeriph_Driver\inc\misc.h
 .\output\bsp_can.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\output\bsp_can.o: ..\User\common.h
+.\output\bsp_can.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\output\bsp_can.o: ..\User\ymodem.h
 .\output\bsp_can.o: ..\User\bsp\bsp_can.h
 .\output\bsp_can.o: ..\User\bsp\bsp_crc8.h
 .\output\bsp_can.o: ..\User\bsp\bsp_tm1639.h
 .\output\bsp_can.o: ..\User\bsp\bsp.h
-.\output\bsp_can.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 .\output\bsp_can.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 .\output\bsp_can.o: ..\User\bsp\bsp_stmflash.h
+.\output\bsp_can.o: ..\User\bsp\bsp_crc16.h

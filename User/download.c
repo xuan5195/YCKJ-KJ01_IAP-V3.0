@@ -33,7 +33,7 @@ void SerialDownload(void)
     int32_t Size = 0;
 
     SerialPutString("Waiting for the file to be sent ... (press 'a' to abort)\n\r");
-    Size = Ymodem_Receive(&tab_1024[0]);
+    Size = Ymodem_Receive(&tab_1024[0]);//开始接收升级程序
     if (Size > 0)
     {
         SerialPutString("\n\n\r Programming Completed Successfully!\n\r--------------------------------\r\n Name: ");

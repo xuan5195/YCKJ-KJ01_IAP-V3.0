@@ -80,40 +80,40 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
     uint16_t i, packet_size;
     uint8_t c;
     *length = 0;
-    if (Receive_Byte(&c, timeout) != 0)
+    if (Receive_Byte(&c, timeout) != 0)	//检测超级终端有没键按下，c: 接收字符
     {
         return -1;
     }
-    switch (c)
+    switch (c)	//c: 接收字符
     {
-    case SOH:
-        packet_size = PACKET_SIZE;
-        break;
-    case STX:
-        packet_size = PACKET_1K_SIZE;
-        break;
-    case EOT:
-        return 0;
-    case CA:
-        if ((Receive_Byte(&c, timeout) == 0) && (c == CA))
-        {
-            *length = -1;
-            return 0;
-        }
-        else
-        {
-            return -1;
-        }
-    case ABORT1:
-    case ABORT2:
-        return 1;
-    default:
-        return -1;
+		case SOH:	//YModem协议头，长度为128Byte
+			packet_size = PACKET_SIZE;
+			break;
+		case STX:	//YModem协议头，长度为1024Byte
+			packet_size = PACKET_1K_SIZE;
+			break;
+		case EOT:	//接收完成
+			return 0;
+		case CA:
+			if ((Receive_Byte(&c, timeout) == 0) && (c == CA))
+			{
+				*length = -1;
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
+		case ABORT1:
+		case ABORT2:
+			return 1;
+		default:
+			return -1;
     }
     *data = c;
     for (i = 1; i < (packet_size + PACKET_OVERHEAD); i ++)
     {
-        if (Receive_Byte(data + i, timeout) != 0)
+        if (Receive_Byte(data + i, timeout) != 0)	//接收数据
         {
             return -1;
         }
@@ -132,7 +132,7 @@ int32_t Ymodem_Receive (uint8_t *buf)
 	int32_t i, j, packet_length, session_done, file_done, packets_received, errors, session_begin, size = 0;
 
 	/* Initialize FlashDestination variable */
-	FlashDestination = ApplicationAddress;
+	FlashDestination = ApplicationAddress;	//存放APP代码起始地址
 	for (session_done = 0, errors = 0, session_begin = 0; ;)//死循环，一个ymodem连接
 	{
 		for (packets_received = 0, file_done = 0, buf_ptr = buf; ;)//死循环，不断接收数据

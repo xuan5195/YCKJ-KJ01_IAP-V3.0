@@ -27,6 +27,7 @@ typedef  void (*pFunction)(void);
 #define CMD_STRING_SIZE       128
 
 #define ApplicationAddress    0x8005000
+#define EXE_APP_FLAG			ApplicationAddress
 
 #if defined (STM32F10X_MD) || defined (STM32F10X_MD_VL)
  #define PAGE_SIZE                         (0x400)    /* 1 Kbyte */
@@ -74,6 +75,7 @@ void FLASH_DisableWriteProtectionPages(void);
 void Main_Menu(void);
 void SerialDownload(void);
 void SerialUpload(void);
+void CAN_JumpToApplication(void);
 
 #endif  /* _COMMON_H */
 

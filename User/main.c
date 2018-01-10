@@ -40,7 +40,7 @@ void USART_Configuration(void);
 *******************************************************************************/
 int main(void)
 {
-    
+    uint8_t Number[10] = "          ";
     FLASH_Unlock();//Flash 解锁
 	BspTm1639_Config();
 	BspTm1639_Show(0x03,0x00);
@@ -48,24 +48,16 @@ int main(void)
 	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...Starting Up...\r\n");
 	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_8tq,CAN_BS2_7tq,5,CAN_Mode_Normal);//CAN初始化正常模式,波特率450Kbps    
 	Read_Flash_Dat();	//读取Flash数据
-	SerialPutString("g_IAP_Flag:");	SerialPutString(g_IAP_Flag);
-//	printf("Physical_ADD:%02X%02X%02X%02X;\r\n",Physical_ADD[0],Physical_ADD[1],Physical_ADD[2],Physical_ADD[3]);
-//	printf("FM1702_Key:%02X%02X%02X%02X%02X%02X; %02d;\r\n",FM1702_Key[0],FM1702_Key[1],FM1702_Key[2],FM1702_Key[3],FM1702_Key[4],FM1702_Key[5],FM1702_Key[6]);
-//	printf("WaterCost:0.%03d; CostNum:%02d; g_IAP_Flag:0x%02X;\r\n",WaterCost,CostNum,g_IAP_Flag);
+	SerialPutString("g_IAP_Flag:");
+	Int2Str(Number, g_IAP_Flag);
+	SerialPutString(Number);
     while (1)
     {
-		//if (GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13)  == 0x00)
 		if (g_IAP_Flag  == 0xAA)
 		{
-			//假如按键按下
 			//执行IAP驱动程序更新Flash程序
-
 			SerialPutString("\r\n======================================================================");
-			SerialPutString("\r\n=              (C) COPYRIGHT 2011 Lierda                             =");
-			SerialPutString("\r\n=                                                                    =");
 			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.2.3)        =");
-			SerialPutString("\r\n=                                                                    =");
-			SerialPutString("\r\n=             0x0800 5000           By 12345678                      =");
 			SerialPutString("\r\n======================================================================");
 			SerialPutString("\r\n\r\n");
 			Main_Menu ();
