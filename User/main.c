@@ -51,6 +51,7 @@ int main(void)
 	SerialPutString("g_IAP_Flag:");
 	Int2Str(Number, g_IAP_Flag);
 	SerialPutString(Number);
+	printf("g_IAP_Flag:0x%02X;\r\n",g_IAP_Flag);
     while (1)
     {
 		if (g_IAP_Flag  == 0xAA)
