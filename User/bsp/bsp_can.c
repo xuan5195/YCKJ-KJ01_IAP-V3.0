@@ -200,9 +200,12 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 	{
 		//CMD_List.EraseFlash，擦除Flash中的数据，起始地址存储在Data[0]到Data[3]中，结束地址存储在Data[4]到Data[7]中
 		case CMD_List_EraseFlash:
-			SerialPutString("CMD_List_EraseFlash\r\n");
+			SerialPutString("CMD_List_EraseFlash, ");
 			__set_PRIMASK(1);
 			FLASH_Unlock();
+			printf("Start_addr:0x%02X%02X%02X%02X;  And_addr:0x%02X%02X%02X%02X;  ",\
+			pRxMessage->Data[0],pRxMessage->Data[1],pRxMessage->Data[2],pRxMessage->Data[3],\
+			pRxMessage->Data[4],pRxMessage->Data[5],pRxMessage->Data[6],pRxMessage->Data[7]);
 			ret = CAN_BOOT_ErasePage((pRxMessage->Data[0]<<24)|(pRxMessage->Data[1]<<16)|(pRxMessage->Data[2]<<8)|(pRxMessage->Data[3]<<0),
 									 (pRxMessage->Data[4]<<24)|(pRxMessage->Data[5]<<16)|(pRxMessage->Data[6]<<8)|(pRxMessage->Data[7]<<0));
 			FLASH_Lock();	
@@ -216,13 +219,16 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 				TxMessage.DLC = 0;
 				CAN_WriteData(&TxMessage);
 			}
+			printf("EraseFlash Over;\r\n");
 			break;
 		//CMD_List.BlockWriteInfo，设置写Flash数据的相关信息，比如数据起始地址，数据大小
 		//数据起始地址存储在Data[0]到Data[3]中，数据大小存储在Data[4]到Data[7]中，该函数必须在Bootloader程序中实现，APP程序可以不用实现
 		case CMD_List_BlockWriteInfo:
-			SerialPutString("CMD_List_BlockWriteInfo\r\n");
+			printf("CMD_List_BlockWriteInfo, ");
 			start_addr = (pRxMessage->Data[0]<<24)|(pRxMessage->Data[1]<<16)|(pRxMessage->Data[2]<<8)|(pRxMessage->Data[3]<<0);
 			data_size = (pRxMessage->Data[4]<<24)|(pRxMessage->Data[5]<<16)|(pRxMessage->Data[6]<<8)|(pRxMessage->Data[7]<<0);
+			printf("Start_addr:0x%02X%02X%02X%02X;  Data_size:%4d;  ",\
+			pRxMessage->Data[0],pRxMessage->Data[1],pRxMessage->Data[2],pRxMessage->Data[3],data_size);
 			data_index = 0;
 //			if(can_addr != 0x00)
 			{
@@ -236,31 +242,36 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 		//对数据进行CRC校验，若数据校验无误，则将数据写入Flash中
 		//该函数在Bootloader程序中必须实现，APP程序可以不用实现
 		case CMD_List_WriteBlockFlash:
-			SerialPutString("CMD_List_WriteBlockFlash\r\n");
+			printf("CMD_List_WriteBlockFlash, %4d; >>",data_index);
 			if((data_index<data_size)&&(data_index<1026))
 			{
 				__set_PRIMASK(1);
 				for(i=0;i<pRxMessage->DLC;i++)
 				{
 					data_temp[data_index++] = pRxMessage->Data[i];
+					printf(" %02X",pRxMessage->Data[i]);
 				}
+				printf("\r\n");
 				__set_PRIMASK(0);
 			}
 			if((data_index>=data_size)||(data_index>=1026))
 			{
+				printf("(data_index>=data_size)||(data_index>=1026);\r\n");
 				crc_data = crc16_ccitt(data_temp,data_size-2);
 				if(crc_data==((data_temp[data_size-2]<<8)|(data_temp[data_size-1])))
 				{
 					__set_PRIMASK(1);
 					FLASH_Unlock();
 					ret = CAN_BOOT_ProgramDatatoFlash(start_addr,data_temp,data_index-2);
+					printf("ProgramDatatoFlash.\r\n");
 					FLASH_Lock();	
 					__set_PRIMASK(0);
 //					if(can_addr != 0x00)
 					{
 						if(ret==FLASH_COMPLETE)
 						{
-							TxMessage.StdId = CAN_BOOT_GetAddrData()|CMD_List_WriteBlockFlash;	
+							TxMessage.StdId = CAN_BOOT_GetAddrData()|CMD_List_WriteBlockFlash;
+							printf("ProgramDatatoFlash Over.\r\n");							
 						}
 						else
 						{

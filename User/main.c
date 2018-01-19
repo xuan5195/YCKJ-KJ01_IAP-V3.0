@@ -40,7 +40,6 @@ void USART_Configuration(void);
 *******************************************************************************/
 int main(void)
 {
-    uint8_t Number[10] = "          ";
     FLASH_Unlock();//Flash 解锁
 	BspTm1639_Config();
 	BspTm1639_Show(0x03,0x00);
@@ -48,17 +47,15 @@ int main(void)
 	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...Starting Up...\r\n");
 	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_8tq,CAN_BS2_7tq,5,CAN_Mode_Normal);//CAN初始化正常模式,波特率450Kbps    
 	Read_Flash_Dat();	//读取Flash数据
-	SerialPutString("g_IAP_Flag:");
-	Int2Str(Number, g_IAP_Flag);
-	SerialPutString(Number);
 	printf("g_IAP_Flag:0x%02X;\r\n",g_IAP_Flag);
+	g_IAP_Flag = 0xAA;
     while (1)
     {
 		if (g_IAP_Flag  == 0xAA)
 		{
 			//执行IAP驱动程序更新Flash程序
 			SerialPutString("\r\n======================================================================");
-			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.2.3)        =");
+			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.2.4)        =");
 			SerialPutString("\r\n======================================================================");
 			SerialPutString("\r\n\r\n");
 			Main_Menu ();

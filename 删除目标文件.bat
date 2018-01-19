@@ -13,6 +13,14 @@ del /Q project\MDK-ARM(uV4)\*.dep
 del /Q project\MDK-ARM(uV4)\JLink*
 del /Q project\MDK-ARM(uV4)\project.uvgui.*
 
+rd /Q /S RVMDK\Flash
+rd /Q /S RVMDK\CpuRAM
+rd /Q /S RVMDK\ExtSRAM
+del /Q RVMDK\*.bak
+del /Q RVMDK\*.dep
+del /Q RVMDK\JLink*
+del /Q RVMDK\project.uvgui.*
+
 del /Q project\EWARMv5\Project.dep
 del /Q project\EWARMv5\Flash
 del /Q project\EWARMv5\CpuRAM
