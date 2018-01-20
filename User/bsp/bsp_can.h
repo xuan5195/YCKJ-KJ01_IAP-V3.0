@@ -32,6 +32,8 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage);
 FLASH_Status CAN_BOOT_ErasePage(uint32_t StartPageAddr,uint32_t EndPageAddr);
 FLASH_Status CAN_BOOT_ProgramDatatoFlash(uint32_t StartAddress,uint8_t *pData,uint32_t DataNum); 
 uint16_t CAN_BOOT_GetAddrData(void);
+void CAN_IAPCommand(CanRxMsg *pRxMessage);
+
 
 #endif
 

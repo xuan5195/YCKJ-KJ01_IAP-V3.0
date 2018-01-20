@@ -413,7 +413,11 @@ void Main_Menu(void)
     {
 		if(CAN1_CanRxMsgFlag)
 		{
-			CAN_BOOT_ExecutiveCommand(&CAN1_RxMessage);
+			//printf("CanRxMsg: %02X%02X %02X%02X %02X%02X %02X%02X;\r\n",\
+			CAN1_RxMessage.Data[0],CAN1_RxMessage.Data[1],CAN1_RxMessage.Data[2],CAN1_RxMessage.Data[3],\
+			CAN1_RxMessage.Data[4],CAN1_RxMessage.Data[5],CAN1_RxMessage.Data[6],CAN1_RxMessage.Data[7]);
+			//CAN_BOOT_ExecutiveCommand(&CAN1_RxMessage);
+			CAN_IAPCommand(&CAN1_RxMessage);
 			CAN1_CanRxMsgFlag = 0;
 		}
 		

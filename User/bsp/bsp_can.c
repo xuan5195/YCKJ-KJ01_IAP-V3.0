@@ -92,12 +92,18 @@ u8 CAN_Mode_Init(u8 tsjw,u8 tbs2,u8 tbs1,u16 brp,u8 mode)
 }   
  
 #if CAN_RX0_INT_ENABLE	//使能RX0中断
-	    
+
+u8 g_CanRecCount=0;//CAN数据包接收标志，0-15；每次接收16帧
+u8 g_CanPackDat[128+8]={0};	//前128个为数据包，最后一个为CRC8
 void USB_LP_CAN1_RX0_IRQHandler(void)	//中断服务函数		
 {
 	CAN_Receive(CAN1,CAN_FIFO0, &CAN1_RxMessage);
-	CAN_ClearITPendingBit(CAN1,CAN_IT_FMP0);
+//	printf("CanRxMsg:%03X %02X%02X %02X%02X %02X%02X %02X%02X;\r\n",CAN1_RxMessage.StdId,\
+	CAN1_RxMessage.Data[0],CAN1_RxMessage.Data[1],CAN1_RxMessage.Data[2],CAN1_RxMessage.Data[3],\
+	CAN1_RxMessage.Data[4],CAN1_RxMessage.Data[5],CAN1_RxMessage.Data[6],CAN1_RxMessage.Data[7]);
+//	CAN_ClearITPendingBit(CAN1,CAN_IT_FMP0);
 	CAN1_CanRxMsgFlag = 1;
+	
 }
 #endif
 
@@ -182,16 +188,11 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 	CanTxMsg TxMessage;
 	uint8_t ret,i;
 	uint8_t can_cmd = (pRxMessage->StdId)&0x0F;		//ID的bit0~bit3位为命令码 0x7FF 低四位为命令码
-//	uint16_t can_addr = (pRxMessage->StdId >> 4);	//ID的bit4~bit7位为数据包编号，每1K数据包为一个编号，每1K数据包后二位为为CRC16 共1028byte 
-//	uint32_t BaudRate;
-//	static uint32_t jump_addr;
 	uint16_t crc_data;
 	static uint32_t start_addr;
 	static uint32_t data_size=0;
 	static uint32_t data_index=0;
 	__align(4) static uint8_t	data_temp[1028];	//四字体 对齐
-	//判断接收的数据地址是否和本节点地址匹配，若不匹配则直接返回，不做任何事情
-//	if((can_addr!=CAN_BOOT_GetAddrData())&&(can_addr!=0))	return;
 	TxMessage.ExtId = 0;
 	TxMessage.IDE = CAN_Id_Standard;	//不使用扩展标识符
 	TxMessage.RTR = CAN_RTR_Data;		//消息类型：CAN_RTR_Data为数据帧;CAN_RTR_Remote为远程帧
@@ -298,6 +299,80 @@ void CAN_BOOT_ExecutiveCommand(CanRxMsg *pRxMessage)
 			break;
 	}
 }
+
+//执行主机下发的命令
+//pRxMessage CAN总线消息
+void CAN_IAPCommand(CanRxMsg *pRxMessage)
+{
+	uint8_t i;
+	uint8_t crc_data;
+	static uint8_t pack_no;
+	static uint32_t start_addr;
+	static uint32_t data_index=0;
+	__align(4) static uint8_t	data_temp[128+8];	//四字体 对齐
+	switch (0x01)
+	{
+		case 0x00:
+			__set_PRIMASK(1);
+			FLASH_Unlock();
+			FLASH_Lock();	
+			__set_PRIMASK(0);
+			printf("EraseFlash Over;\r\n");
+			break;
+		case 0x01:
+			if( ((pRxMessage->StdId)&0x0FE) == 0xFE )	//接收头
+			{
+				__set_PRIMASK(1);
+				data_index = 0;
+				pack_no = pRxMessage->Data[0];			//数据包序号
+				data_temp[128] = pRxMessage->Data[1];	//CRC
+				printf("pack_no:%02X, CRC:%02X.\r\n",pRxMessage->Data[0],pRxMessage->Data[1]);
+				__set_PRIMASK(0);
+			}
+			else if( ((pRxMessage->StdId)&0x0FF) == pack_no )
+			{
+				__set_PRIMASK(1);
+				for(i=0;i<8;i++)
+				{
+					data_temp[data_index++] = pRxMessage->Data[i];
+//					printf(" %02X",pRxMessage->Data[i]);
+				}
+//				printf("\r\n");
+				__set_PRIMASK(0);
+			}
+			if(data_index>=128)
+			{
+				crc_data = CRC8_Table(data_temp,128);
+				printf("(data_index>=128) crc_data=%02X,data_temp[128]=%02X\r\n",crc_data,data_temp[128]);
+				if( crc_data == data_temp[128] )
+				{
+					__set_PRIMASK(1);
+					FLASH_Unlock();
+					start_addr = ApplicationAddress + 128*(pRxMessage->StdId&0x0FF);
+					CAN_BOOT_ProgramDatatoFlash(start_addr,data_temp,128);
+					printf("start_addr=%08X, ProgramDatatoFlash:\r\n",start_addr);
+					FLASH_Lock();	
+					__set_PRIMASK(0);
+//					for(i=0;i<16;i++)
+//					{
+//						printf("i=%02d: %02X%02X %02X%02X %02X%02X %02X%02X; \r\n",i,data_temp[i*8+0],data_temp[i*8+1],\
+//						data_temp[i*8+2],data_temp[i*8+3],data_temp[i*8+4],data_temp[i*8+5],data_temp[i*8+6],data_temp[i*8+7]);
+//					}
+				}
+				data_index = 0;
+				for(i=0;i<136;i++)	data_temp[i]=0;
+			}
+			break;
+		
+		case 0x03:  //CMD_List.ExcuteApp，控制程序跳转到指定地址执行
+			SerialPutString("CMD_List_ExcuteApp\r\n");
+			CAN_JumpToApplication();
+			break;
+		default:
+			break;
+	}
+}
+
 
 //擦出指定扇区区间的Flash数据 。
 //StartPage 起始扇区地址
