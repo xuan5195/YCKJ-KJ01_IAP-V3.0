@@ -10,6 +10,7 @@ void STMFLASH_Write(u32 WriteAddr,u8 *pBuffer,u16 NumToWrite);		//从指定地址开始
 void STMFLASH_Read(u32 ReadAddr,u8 *pBuffer,u16 NumToRead);   		//从指定地址开始读出指定长度的数据
 void Read_Flash_Dat(void);
 void Write_Flash_Dat(void);
+void Show_Flash_Dat(uint8_t _No);	//每K数据显示
 
 
 #endif

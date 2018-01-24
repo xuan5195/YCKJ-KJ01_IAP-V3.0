@@ -13,6 +13,7 @@ CanRxMsg CAN1_RxMessage;
 volatile uint8_t CAN1_CanRxMsgFlag=0;//接收到CAN数据后的标志
 extern uint8_t g_RxMessage[8];	//CAN接收数据
 extern uint8_t g_RxMessFlag;	//CAN接收数据 标志
+extern uint8_t g_PrintfFlag;
 
 //CAN初始化
 //tsjw:重新同步跳跃时间单元.范围:1~3; CAN_SJW_1tq	 CAN_SJW_2tq CAN_SJW_3tq CAN_SJW_4tq
@@ -24,6 +25,7 @@ extern uint8_t g_RxMessFlag;	//CAN接收数据 标志
 //mode:0,普通模式;1,回环模式;
 //Fpclk1的时钟在初始化的时候设置为36M,如果设置CAN_Normal_Init(1,8,7,5,1);
 //则波特率为:36M/((1+8+7)*5)=450Kbps
+//则波特率为:36M/((1+13+2)*18)=125Kbps CAN_Normal_Init(1,13,2,18,1);
 //返回值:0,初始化OK;	其他,初始化失败;
 
 
@@ -310,26 +312,33 @@ void CAN_IAPCommand(CanRxMsg *pRxMessage)
 	static uint32_t start_addr;
 	static uint32_t data_index=0;
 	__align(4) static uint8_t	data_temp[128+8];	//四字体 对齐
-	switch (0x01)
+	switch ((pRxMessage->StdId)&0x0FF)
 	{
-		case 0x00:
+		case 0xFB:  //用于打印内部Flash数据，串口打印 测试使用
+			g_PrintfFlag = 0xAA;	//打印标志
+			break;
+		case 0xFC:  //控制程序跳转到指定地址执行
+			SerialPutString("CMD_List_ExcuteApp\r\n");
+			CAN_JumpToApplication();
+			break;
+		case 0xFD:	//擦除对应FLash页
 			__set_PRIMASK(1);
 			FLASH_Unlock();
+			CAN_BOOT_ErasePage(0x08005000,0x0800F800);	//擦除42K Flash
 			FLASH_Lock();	
 			__set_PRIMASK(0);
 			printf("EraseFlash Over;\r\n");
 			break;
-		case 0x01:
-			if( ((pRxMessage->StdId)&0x0FE) == 0xFE )	//接收头
-			{
-				__set_PRIMASK(1);
-				data_index = 0;
-				pack_no = pRxMessage->Data[0];			//数据包序号
-				data_temp[128] = pRxMessage->Data[1];	//CRC
-				printf("pack_no:%02X, CRC:%02X.\r\n",pRxMessage->Data[0],pRxMessage->Data[1]);
-				__set_PRIMASK(0);
-			}
-			else if( ((pRxMessage->StdId)&0x0FF) == pack_no )
+		case 0xFE:	//数据包头+CRC
+			__set_PRIMASK(1);
+			data_index = 0;
+			pack_no = pRxMessage->Data[0];			//数据包序号
+			data_temp[128] = pRxMessage->Data[1];	//CRC
+			printf("pack_no:%02X, CRC:%02X.\r\n",pRxMessage->Data[0],pRxMessage->Data[1]);
+			__set_PRIMASK(0);
+			break;
+		default:	//数据包内容
+			if( ((pRxMessage->StdId)&0x0FF) == pack_no )
 			{
 				__set_PRIMASK(1);
 				for(i=0;i<8;i++)
@@ -362,13 +371,6 @@ void CAN_IAPCommand(CanRxMsg *pRxMessage)
 				data_index = 0;
 				for(i=0;i<136;i++)	data_temp[i]=0;
 			}
-			break;
-		
-		case 0x03:  //CMD_List.ExcuteApp，控制程序跳转到指定地址执行
-			SerialPutString("CMD_List_ExcuteApp\r\n");
-			CAN_JumpToApplication();
-			break;
-		default:
 			break;
 	}
 }

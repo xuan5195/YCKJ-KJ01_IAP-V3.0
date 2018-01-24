@@ -25,6 +25,7 @@ extern uint8_t g_IAP_Flag;	//在线升级标志
 extern CanRxMsg CAN1_RxMessage;
 extern volatile uint8_t CAN1_CanRxMsgFlag;//接收到CAN数据后的标志
 
+uint8_t g_PrintfFlag=0;
 
 /*******************************************************************************
   * @函数名称	Int2Str
@@ -402,7 +403,7 @@ void FLASH_DisableWriteProtectionPages(void)
 *******************************************************************************/
 void Main_Menu(void)
 {
-//    uint8_t key = 0;
+    uint8_t i = 0;
     BlockNbr = (FlashDestination - 0x08000000) >> 12;	//计算flash块
     UserMemoryMask = ((uint32_t)~((1 << BlockNbr) - 1));//计算掩码
 
@@ -416,9 +417,14 @@ void Main_Menu(void)
 			//printf("CanRxMsg: %02X%02X %02X%02X %02X%02X %02X%02X;\r\n",\
 			CAN1_RxMessage.Data[0],CAN1_RxMessage.Data[1],CAN1_RxMessage.Data[2],CAN1_RxMessage.Data[3],\
 			CAN1_RxMessage.Data[4],CAN1_RxMessage.Data[5],CAN1_RxMessage.Data[6],CAN1_RxMessage.Data[7]);
-			//CAN_BOOT_ExecutiveCommand(&CAN1_RxMessage);
 			CAN_IAPCommand(&CAN1_RxMessage);
 			CAN1_CanRxMsgFlag = 0;
+		}
+		if(	g_PrintfFlag == 0xAA)
+		{
+			g_PrintfFlag = 0x00;
+			for(i=0;i<5;i++)
+			Show_Flash_Dat(i);
 		}
 		
 //        key = GetKey();
@@ -438,10 +444,11 @@ void Main_Menu(void)
 }
 
 
+
+
 //控制程序跳转到指定位置开始执行 。
 //Addr 程序执行地址。
 //程序跳转状态。
-
 void CAN_JumpToApplication(void)
 {
 	JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);            

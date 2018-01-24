@@ -1,9 +1,10 @@
 #include "bsp_stmflash.h"
 #include "bsp_crc8.h"
+#include "bsp.h"
 
 #define FLASH_SAVE_ADD		0x0800FC00		//Flash存储起始地址 为Flash最后一页，大小为1K
 
-uint8_t Physical_ADD[4]={0x20,0x17,0x12,0x1A};//物理地址
+uint8_t Physical_ADD[4]={0x20,0x17,0x12,0x5D};//物理地址 0x40
 uint8_t FM1702_Key[7]={0xFF,0xFF,0xFF,0xFF,0xFF,0xF1,0x29};
 uint8_t WaterCost=50,CostNum=29;	//WaterCost=水费 最小扣款金额  //脉冲数
 uint8_t g_IAP_Flag=0x00;	//在线升级标志
@@ -19,13 +20,15 @@ u16 STMFLASH_ReadHalfWord(u32 faddr)
 
 void STMFLASH_Write(u32 WriteAddr,u8 *pBuffer,u16 NumToWrite)	
 {
- 	u16 i;    
+ 	u16 i,DateTemp=0;    
 	FLASH_Unlock();		//解锁
 	FLASH_ClearFlag(FLASH_FLAG_BSY|FLASH_FLAG_EOP|FLASH_FLAG_PGERR|FLASH_FLAG_WRPRTERR);
 	FLASH_ErasePage(FLASH_SAVE_ADD);	
-	for(i=0;i<NumToWrite;i++)
+	for(i=0;i<NumToWrite;(i=i+2))
 	{
-		FLASH_ProgramHalfWord(WriteAddr,(u16)pBuffer[i]);
+		DateTemp = ((u16)pBuffer[i+1])<<8 ;
+		DateTemp = DateTemp|pBuffer[i];
+		FLASH_ProgramHalfWord(WriteAddr,DateTemp);
 	    WriteAddr+=2;//地址增加2.
 	}  
 	FLASH_Lock();//上锁
@@ -37,10 +40,12 @@ void STMFLASH_Write(u32 WriteAddr,u8 *pBuffer,u16 NumToWrite)
 //NumToWrite:半字(16位)数
 void STMFLASH_Read(u32 ReadAddr,u8 *pBuffer,u16 NumToRead)   	
 {
-	u16 i;
-	for(i=0;i<NumToRead;i++)
+	u16 i,DateTemp=0;
+	for(i=0;i<NumToRead;(i=i+2))
 	{
-		pBuffer[i]=(u8)STMFLASH_ReadHalfWord(ReadAddr);//读取2个字节.
+		DateTemp = STMFLASH_ReadHalfWord(ReadAddr);//读取2个字节.
+		pBuffer[i]	=(u8)(DateTemp);
+		pBuffer[i+1]=(u8)(DateTemp>>8);
 		ReadAddr+=2;//偏移2个字节.	
 	}
 }
@@ -52,6 +57,7 @@ void Read_Flash_Dat(void)
 	u8 datatemp[16]={0};
 	STMFLASH_Read(FLASH_SAVE_ADD,datatemp,16);
 	if((datatemp[0]!=0x00)&&(datatemp[0]!=0xFF)&&(datatemp[1]!=0x00)&&(datatemp[1]!=0xFF))
+	//if((datatemp[0]!=0xFF))
 	{
 		Physical_ADD[0] = datatemp[0];	//物理地址0
 		Physical_ADD[1] = datatemp[1];	//物理地址1
@@ -102,7 +108,7 @@ void Read_Flash_Dat(void)
 		datatemp[11] = FM1702_Key[6];	//块地址
 		datatemp[12] = WaterCost;		//水费 最小扣款金额
 		datatemp[13] = CostNum;			//脉冲数
-		datatemp[14] = 0x00;			//程度升级标志
+		datatemp[14] = g_IAP_Flag;		//程序升级标志
 		datatemp[15] = CRC8_Table(datatemp+4,11);
 		STMFLASH_Write(FLASH_SAVE_ADD,datatemp,16);
 	}
@@ -133,6 +139,24 @@ void Write_Flash_Dat(void)
 	   (datatemp2[ 8]!=datatemp1[ 8])||(datatemp2[ 7]!=datatemp1[ 7])||(datatemp2[ 6]!=datatemp1[ 6])||\
 	   (datatemp2[ 5]!=datatemp1[ 5]))	//数据不一样才写Flash
 		{STMFLASH_Write(FLASH_SAVE_ADD,datatemp2,16);}
+}
+
+void Show_Flash_Dat(uint8_t _No)	//每K数据显示
+{
+	u8 DateTemp[1024] = {0}; 
+	u8 i,j;
+	STMFLASH_Read(0x08005000+_No*512,DateTemp,1024);	//读出的值
+//	printf("\r\n第%02X数据...",_No);
+	for(i = 0; i < 32; i++)
+	{
+		printf("\r\n%03d: ",i+_No*32+1);
+		for(j = 0; j < 16; j++)
+		{
+			printf("%02X", DateTemp[i*16+j]);
+			if ( j%2 == 1)		printf(" ");	/* 每行显示16字节数据 */
+		}
+	}
+	
 }
 
 

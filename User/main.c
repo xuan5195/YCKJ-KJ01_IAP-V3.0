@@ -40,28 +40,27 @@ void USART_Configuration(void);
 *******************************************************************************/
 int main(void)
 {
+	uint8_t ProgramCount=0;
     FLASH_Unlock();//Flash 解锁
 	BspTm1639_Config();
 	BspTm1639_Show(0x03,0x00);
     IAP_Init();
-	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...Starting Up...\r\n");
-	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_8tq,CAN_BS2_7tq,5,CAN_Mode_Normal);//CAN初始化正常模式,波特率450Kbps    
+	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...\r\nStarting Up...");
+	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_8tq,CAN_BS2_7tq,18,CAN_Mode_Normal);//CAN初始化正常模式,波特率125Kbps    
 	Read_Flash_Dat();	//读取Flash数据
 	printf("g_IAP_Flag:0x%02X;\r\n",g_IAP_Flag);
-	g_IAP_Flag = 0xAA;
+//	g_IAP_Flag = 0xAA;
     while (1)
     {
 		if (g_IAP_Flag  == 0xAA)
-		{
-			//执行IAP驱动程序更新Flash程序
+		{//执行IAP驱动程序更新Flash程序
 			SerialPutString("\r\n======================================================================");
 			SerialPutString("\r\n=     In-Application Programming Application  (Version 1.2.4)        =");
 			SerialPutString("\r\n======================================================================");
 			SerialPutString("\r\n\r\n");
 			Main_Menu ();
-		}
-		//否则执行用户程序
-		else
+		}		
+		else//否则执行用户程序
 		{
 			//判断用户是否已经下载程序，因为正常情况下此地址是栈地址。
 			//若没有这一句的话，即使没有下载程序也会进入而导致跑飞。
@@ -79,7 +78,11 @@ int main(void)
 			else
 			{
 				SerialPutString("no user Program\r\n\n");
-				Delay(0xFFFF);
+				Delay(0xFFFF);Delay(0xFFFF);Delay(0xFFFF);Delay(0xFFFF);
+				Delay(0xFFFF);Delay(0xFFFF);Delay(0xFFFF);Delay(0xFFFF);
+				Delay(0xFFFF);Delay(0xFFFF);Delay(0xFFFF);Delay(0xFFFF);
+				if(ProgramCount>200)	g_IAP_Flag = 0xAA;	//转入IAP程序接收模式
+				else 					ProgramCount++;
 			}
 		}
     }
