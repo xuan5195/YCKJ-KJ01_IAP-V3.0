@@ -46,7 +46,7 @@ int main(void)
 	BspTm1639_Show(0x03,0x00);
     IAP_Init();
 	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...\r\nStarting Up...");
-	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_8tq,CAN_BS2_7tq,18,CAN_Mode_Normal);//CAN初始化正常模式,波特率125Kbps    
+	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_13tq,CAN_BS2_2tq,25,CAN_Mode_Normal);//CAN初始化正常模式,波特率90Kbps    
 	Read_Flash_Dat();	//读取Flash数据
 	printf("g_IAP_Flag:0x%02X;\r\n",g_IAP_Flag);
 //	g_IAP_Flag = 0xAA;
