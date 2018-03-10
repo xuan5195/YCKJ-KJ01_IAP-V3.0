@@ -120,6 +120,16 @@ void BspTm1639_Show(uint8_t ShowMode,uint32_t ShowDate)
 			udat = 0x00;				BspTm1639_Writebyte(udat);			BspTm1639_Writebyte(udat);//DIG6
 			udat = 0x00;				BspTm1639_Writebyte(udat);			BspTm1639_Writebyte(udat);//DIG7
 		}
+		else if(ShowMode==0x13)	//œ‘ æ¥˙¬Î£¨" ------ "
+		{
+			BspTm1639_Writebyte(DIG0);
+			BspTm1639_Writebyte(0x00);	BspTm1639_Writebyte(0x00);
+			for(i=0;i<6;i++)
+			{
+				BspTm1639_Writebyte(0x00);	BspTm1639_Writebyte(0x04);
+			}
+			BspTm1639_Writebyte(0x00);	BspTm1639_Writebyte(0x00);		
+		}
 		TM1639_STB_High();
 		BspTm1639_Writebyte(LEVEL_USE);
 		TM1639_STB_High();

@@ -336,6 +336,8 @@ void CAN_IAPCommand(CanRxMsg *pRxMessage)
 			data_temp[128] = pRxMessage->Data[1];	//CRC
 			printf("pack_no:%02X, CRC:%02X.\r\n",pRxMessage->Data[0],pRxMessage->Data[1]);
 			__set_PRIMASK(0);
+			if((pack_no%2)==0)	BspTm1639_Show(0x03,0x00);
+			else				BspTm1639_Show(0x13,0x00);
 			break;
 		default:	//数据包内容
 			if( ((pRxMessage->StdId)&0x0FF) == pack_no )

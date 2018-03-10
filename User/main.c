@@ -43,10 +43,14 @@ int main(void)
 	uint8_t ProgramCount=0;
     FLASH_Unlock();//Flash 解锁
 	BspTm1639_Config();
-	BspTm1639_Show(0x03,0x00);
+	BspTm1639_Show(0x03,0x00);Delay(0xFF);
     IAP_Init();
 	SerialPutString("\r\n\r\nYCKJ-KJ01_IAP V0.1...\r\nStarting Up...");
-	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_13tq,CAN_BS2_2tq,25,CAN_Mode_Normal);//CAN初始化正常模式,波特率90Kbps    
+//	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_13tq,CAN_BS2_1tq,60,CAN_Mode_Normal);	//CAN初始化正常模式,波特率40Kbps  //则波特率为:36M/((1+13+1)*60)= 40Kbps CAN_Normal_Init(1,13,1,60,1);   
+//	CAN_Mode_Init(CAN_SJW_2tq,CAN_BS1_16tq,CAN_BS2_2tq,90,CAN_Mode_Normal);	//CAN初始化正常模式,波特率20Kbps  //则波特率为:36M/((2+16+2)*90)= 20Kbps CAN_Normal_Init(2,16,2,90,1);   
+//	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_15tq,CAN_BS2_4tq,36,CAN_Mode_Normal);	//CAN初始化正常模式,波特率50Kbps  //则波特率为:36M/((1+15+4)*36)= 50Kbps CAN_Normal_Init(1,15,4,36,1);   
+	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_4tq,CAN_BS2_3tq,75,CAN_Mode_Normal);	//CAN初始化正常模式,波特率60Kbps  //则波特率为:36M/((1+2+1)*150)= 60Kbps CAN_Normal_Init(1,2,1,150,1);   
+//	CAN_Mode_Init(CAN_SJW_1tq,CAN_BS1_13tq,CAN_BS2_2tq,25,CAN_Mode_Normal);	//CAN初始化正常模式,波特率90Kbps    
 	Read_Flash_Dat();	//读取Flash数据
 	printf("g_IAP_Flag:0x%02X;\r\n",g_IAP_Flag);
 //	g_IAP_Flag = 0xAA;
